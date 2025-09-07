@@ -5,6 +5,13 @@ export interface Auth {
     user: User;
 }
 
+export interface Game {
+    id: number;
+    white_player_id: number;
+    black_player_id: number;
+    fen: string;
+}
+
 export interface BreadcrumbItem {
     title: string;
     href: string;
@@ -26,6 +33,7 @@ export interface SharedData {
     name: string;
     quote: { message: string; author: string };
     auth: Auth;
+    game: Game;
     ziggy: Config & { location: string };
     sidebarOpen: boolean;
     [key: string]: unknown;
