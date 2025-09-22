@@ -39,7 +39,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
-        $game = Game::all()->findOrFail(1);
+        $game = Game::find(1);
 
         return [
             ...parent::share($request),
