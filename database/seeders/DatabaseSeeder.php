@@ -15,12 +15,16 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-       // User::factory()->create([
-       //     'name' => 'Test User',
-       //     'email' => 'test@example.com',
-       // ]);
-       $this->call(GameSeeder::class);
-
-
+        User::factory()->create([
+            'name' => 'asd',
+            'email' => 'asd@a.a',
+            'password' => 'asdasdasd',
+        ]);
+        User::factory()->create([
+            'name' => 'qwe',
+            'email' => 'qwe@a.a',
+            'password' => 'asdasdasd',
+        ]);
+        $this->call(GameSeeder::class);
     }
 }
