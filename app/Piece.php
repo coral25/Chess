@@ -28,6 +28,11 @@ class Piece
         if (!$to->isValid()) return false;
         if ($from->equals($to)) return false;
 
+        $targetPiece = $board->getPieceOn($to);
+        if ($targetPiece && $targetPiece->color == $this->color) {
+            return false;
+        }
+
         return match ($this->type) {
             PieceType::PAWN => $this->validatePawnMove($board, $from, $to),
             PieceType::ROOK => $this->validateRookMove($board, $from, $to),
@@ -35,6 +40,22 @@ class Piece
             PieceType::BISHOP => $this->validateBishopMove($board, $from, $to),
             PieceType::QUEEN => $this->validateQueenMove($board, $from, $to),
             PieceType::KING => $this->validateKingMove($board, $from, $to),
+        };
+    }
+
+    public function canAttack(Board $board, Square $from, Square $to): bool
+    {
+        $pawnDirection = $this->color === Color::WHITE ? 1 : -1;
+        $fileDiff = abs($to->file - $from->file);
+        $rankDiff = abs($to->rank - $from->rank);
+
+        return match ($this->type) {
+            PieceType::PAWN => $fileDiff === 1 && $to->rank - $from->rank === $pawnDirection,
+            PieceType::ROOK => ($from->file === $to->file || $from->rank === $to->rank) && !$this->isPathClear($board, $from, $to),
+            PieceType::KNIGHT => ($fileDiff === 2 && $rankDiff === 1) || ($fileDiff === 1 && $rankDiff === 2),
+            PieceType::BISHOP => $fileDiff === $rankDiff && !$this->isPathClear($board, $from, $to),
+            PieceType::QUEEN => (($from->file === $to->file || $from->rank === $to->rank) ||  $fileDiff === $rankDiff) && !$this->isPathClear($board, $from, $to),
+            PieceType::KING => $fileDiff <= 1 && $rankDiff <= 1,
         };
     }
 
@@ -62,9 +83,16 @@ class Piece
 
         // Capture
         if ($fileDiff === 1 && $rankDiff === $direction) {
-            $targetPiece = $board->getPieceOn($to);
-            if ($targetPiece !== null && $targetPiece->color !== $this->color) {
-                return true;
+            if ($board->gameState->enPassantTarget && $board->gameState->enPassantTarget === $to) {
+                $targetPiece = $board->getPieceOn(new Square($to->file, $from->rank));
+                if ($targetPiece !== null && $targetPiece->color !== $this->color && $board->getPieceOn($to) === null) {
+                    return true;
+                }
+            } else {
+                $targetPiece = $board->getPieceOn($to);
+                if ($targetPiece !== null) {
+                    return true;
+                }
             }
         }
 
@@ -77,8 +105,7 @@ class Piece
             return false;
         }
 
-        return $this->isPathClear($board, $from, $to) &&
-            $this->canCaptureOrMoveToEmpty($board, $to);
+        return $this->isPathClear($board, $from, $to);
     }
 
     private function validateKnightMove(Board $board, Square $from, Square $to): bool
@@ -87,7 +114,7 @@ class Piece
         $fileDiff = abs($to->file - $from->file);
 
         if (($rankDiff === 2 && $fileDiff === 1) || ($rankDiff === 1 && $fileDiff === 2)) {
-            return $this->canCaptureOrMoveToEmpty($board, $to);
+            return true;
         }
 
         return false;
@@ -99,8 +126,7 @@ class Piece
             return false;
         }
 
-        return $this->isPathClear($board, $from, $to) &&
-            $this->canCaptureOrMoveToEmpty($board, $to);
+        return $this->isPathClear($board, $from, $to);
     }
 
     private function validateQueenMove(Board $board, Square $from, Square $to): bool
@@ -114,8 +140,35 @@ class Piece
         $rankDiff = abs($to->rank - $from->rank);
         $fileDiff = abs($to->file - $from->file);
 
-        if ($rankDiff <= 1 && $fileDiff <= 1) {
-            return $this->canCaptureOrMoveToEmpty($board, $to);
+        if ($rankDiff <= 1 && $fileDiff <= 1 && $to->isAttacked($board, $this->color->other())) {
+            return true;
+        }
+
+        if ($rankDiff === 0 && $fileDiff === 2) {
+            $isKingSide = $to->file > $from->file;
+            $rookSquare = new Square($isKingSide ? 7 : 0, $from->rank);
+
+            if ($this->color === Color::WHITE) {
+                if (!($isKingSide ? $board->gameState->whiteCastleKingside : $board->gameState->whiteCastleQueenside)) {
+                    return false;
+                }
+            } else {
+                if (!($isKingSide ? $board->gameState->blackCastleKingside : $board->gameState->blackCastleQueenside)) {
+                    return false;
+                }
+            }
+
+            $rook = $board->getPieceOn($rookSquare);
+            if (!$rook || $rook->type !== PieceType::ROOK) return false;
+
+            if (!$this->isPathClear($board, $from, $rookSquare)) return false;
+
+            if ($from->isAttacked($board, $this->color->other())) return false;
+
+            $passThroughSquare = new Square(((int)(16 - $from->file - $to->file) / 2), $from->rank);
+            if ($passThroughSquare->isAttacked($board, $this->color->other())) return false;
+
+            if ($to->isAttacked($board, $this->color->other())) return false;
         }
 
         return false;
@@ -138,11 +191,5 @@ class Piece
         }
 
         return true;
-    }
-
-    private function canCaptureOrMoveToEmpty(Board $board, Square $to): bool
-    {
-        $targetPiece = $board->getPieceOn($to);
-        return $targetPiece === null || $targetPiece->color !== $this->color;
     }
 }

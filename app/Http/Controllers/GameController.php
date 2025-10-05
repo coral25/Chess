@@ -48,11 +48,11 @@ class GameController extends Controller
 
         $fen = $game->fen;
 
-        $board = new Board($fen);
+        $board = new Board();
 
         [$from, $to] = explode(' ', trim($request->movetext));
 
-        $board->movePiece(Square::fromNotation($from), Square::fromNotation($to));
+        $board->movePiece(Square::fromNotation($from), Square::fromNotation($to), $fen);
 
 
         $move->fen = $game->fen = $board->toFen();

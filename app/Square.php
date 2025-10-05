@@ -2,6 +2,8 @@
 
 namespace App;
 
+use App\Enums\Color;
+
 class Square
 {
     /**
@@ -32,5 +34,19 @@ class Square
     public function toNotation(): string
     {
         return chr(ord('a') + $this->file) . ($this->rank + 1);
+    }
+
+    public function isAttacked(Board $board, Color $attackerColor): bool
+    {
+        for ($file = 0; $file < 8; $file++) {
+            for ($rank = 0; $rank < 8; $rank++) {
+                $square = new Square($file, $rank);
+                $piece = $board->getPieceOn($square);
+                if ($piece && $piece->color === $attackerColor) {
+                    if ($piece->canAttack($board, $square, $this)) return true;
+                }
+            }
+        }
+        return false;
     }
 }

@@ -13,10 +13,10 @@ class Board
     private array $board;
     public GameState $gameState;
 
-    public function __construct(string $fen)
+    public function __construct()
     {
         $this->board = array_fill(0, 8, array_fill(0, 8, null));
-        $this->fromFen($fen);
+        $this->gameState = new GameState();
     }
 
     public function getPieceOn(Square $square): ?Piece
@@ -29,18 +29,76 @@ class Board
         $this->board[$square->file][$square->rank] = $piece;
     }
 
-    public function movePiece(Square $from, Square $to): bool
+    public function movePiece(Square $from, Square $to, string $fen): bool
     {
+        $this->fromFen($fen);
+
         $piece = $this->getPieceOn($from);
 
         if (!$piece) return false;
 
         if (!$piece->canMoveTo($this, $from, $to)) return false;
 
+        if (!$this->gameState->activeColor === $piece->color) return false;
+
+        //todo check castling
+
+        $this->executeMove($piece, $from, $to);
+
+        return true;
+    }
+
+    private function executeMove(Piece $piece, Square $from, Square $to)
+    {
+        $isCapture = $this->getPieceOn($to) !== null;
+
+        //handle en passant
+        if (
+            $piece->type === PieceType::PAWN && $this->gameState->enPassantTarget
+            && $to->equals($this->gameState->enPassantTarget)
+        ) {
+            $isCapture = true;
+            $capturedPawnRank = $piece->color === Color::WHITE ? $to->rank - 1 : $to->rank + 1;
+            $this->setPieceOn(new Square($to->file, $capturedPawnRank), null);
+        }
+
         $this->setPieceOn($to, $piece);
         $this->setPieceOn($from, null);
 
-        return true;
+        $this->updateGameState($piece, $from, $to, $isCapture);
+    }
+
+    private function executeCastling(Square $kingFrom, Square $kingTo): void
+    {
+        $king = $this->getPieceOn($kingFrom);
+        $isKingSide = $kingTo->file - $kingFrom->file > 0;
+
+        $rookFrom = new Square($isKingSide ? 7 : 0, $kingFrom->rank);
+        $rookTo = new Square($isKingSide ? 5 : 3, $kingFrom->rank);
+
+        $rook = $this->getPieceOn($rookFrom);
+
+        $this->setPieceOn($kingTo, $king);
+        $this->setPieceOn($kingFrom, null);
+
+        $this->setPieceOn($rookTo, $rook);
+        $this->setPieceOn($rookFrom, null);
+
+        if ($king->color === Color::WHITE) {
+            $this->gameState->whiteCastleKingside = false;
+            $this->gameState->whiteCastleQueenside = false;
+        } else {
+            $this->gameState->blackCastleKingside = false;
+            $this->gameState->blackCastleQueenside = false;
+        }
+
+        $this->gameState->activeColor = $king->color->other();
+        $this->gameState->enPassantTarget = null;
+        $this->gameState->halfmoves++;
+
+        if ($king->color == Color::BLACK) {
+            $this->gameState->fullmoves++;
+        }
     }
 
     private function fromFen(string $fen)
@@ -158,5 +216,69 @@ class Board
         $color = ctype_upper($char) ? Color::WHITE : Color::BLACK;
         $type  = PieceType::from(strtolower($char));
         return new Piece($color, $type);
+    }
+
+    private function updateGameState(Piece $piece, Square $from, Square $to, bool $isCapture): void
+    {
+        //switch color
+        $this->gameState->activeColor = $piece->color->other();
+
+        //castling
+        $this->updateCastlingRights($piece, $from, $to);
+
+        //en passant target
+        if ($piece->type === PieceType::PAWN && abs($to->rank - $from->rank) === 2) {
+            $direction = $piece->color === Color::WHITE ? 1 : -1;
+            $this->gameState->enPassantTarget = new Square($from->file, $from->rank + $direction);
+        } else {
+            $this->gameState->enPassantTarget = null;
+        }
+
+        //halfmove counter
+        if ($piece->type === PieceType::PAWN || $isCapture) {
+            $this->gameState->halfmoves = 0;
+        } else {
+            $this->gameState->halfmoves++;
+        }
+
+        //fullmove counter
+        if ($piece->color === Color::BLACK) {
+            $this->gameState->fullmoves++;
+        }
+    }
+    private function updateCastlingRights(Piece $piece, Square $from, Square $to): void
+    {
+        //king move
+        if ($piece->type === PieceType::KING) {
+            if ($piece->color === Color::WHITE) {
+                $this->gameState->whiteCastleKingside = false;
+                $this->gameState->whiteCastleQueenside = false;
+            } else {
+                $this->gameState->blackCastleKingside = false;
+                $this->gameState->blackCastleQueenside = false;
+            }
+        }
+
+        //rook move
+        if ($piece->type === PieceType::ROOK) {
+            if ($piece->color === Color::WHITE && $from->rank === 0) {
+                if ($from->file === 0) $this->gameState->whiteCastleKingside = false;
+                if ($from->file === 7) $this->gameState->whiteCastleQueenside = false;
+            } elseif ($piece->color === Color::BLACK && $from->rank === 7) {
+                if ($from->file === 0) $this->gameState->blackCastleKingside = false;
+                if ($from->file === 7) $this->gameState->blackCastleQueenside = false;
+            }
+        }
+
+        //rook capture
+        if ($to->rank === 0) {
+            if ($piece->color === Color::WHITE && $from->rank === 0) {
+                if ($to->file === 0) $this->gameState->whiteCastleKingside = false;
+                if ($to->file === 7) $this->gameState->whiteCastleQueenside = false;
+            } elseif ($to->rank === 7) {
+                if ($to->file === 0) $this->gameState->blackCastleKingside = false;
+                if ($to->file === 7) $this->gameState->blackCastleQueenside = false;
+            }
+        }
     }
 }
