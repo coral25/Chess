@@ -51,10 +51,10 @@ class Piece
 
         return match ($this->type) {
             PieceType::PAWN => $fileDiff === 1 && $to->rank - $from->rank === $pawnDirection,
-            PieceType::ROOK => ($from->file === $to->file || $from->rank === $to->rank) && !$this->isPathClear($board, $from, $to),
+            PieceType::ROOK => ($from->file === $to->file || $from->rank === $to->rank) && $this->isPathClear($board, $from, $to),
             PieceType::KNIGHT => ($fileDiff === 2 && $rankDiff === 1) || ($fileDiff === 1 && $rankDiff === 2),
-            PieceType::BISHOP => $fileDiff === $rankDiff && !$this->isPathClear($board, $from, $to),
-            PieceType::QUEEN => (($from->file === $to->file || $from->rank === $to->rank) ||  $fileDiff === $rankDiff) && !$this->isPathClear($board, $from, $to),
+            PieceType::BISHOP => $fileDiff === $rankDiff && $this->isPathClear($board, $from, $to),
+            PieceType::QUEEN => (($from->file === $to->file || $from->rank === $to->rank) ||  $fileDiff === $rankDiff) && $this->isPathClear($board, $from, $to),
             PieceType::KING => $fileDiff <= 1 && $rankDiff <= 1,
         };
     }
@@ -83,16 +83,12 @@ class Piece
 
         // Capture
         if ($fileDiff === 1 && $rankDiff === $direction) {
-            if ($board->gameState->enPassantTarget && $board->gameState->enPassantTarget === $to) {
-                $targetPiece = $board->getPieceOn(new Square($to->file, $from->rank));
-                if ($targetPiece !== null && $targetPiece->color !== $this->color && $board->getPieceOn($to) === null) {
-                    return true;
-                }
-            } else {
-                $targetPiece = $board->getPieceOn($to);
-                if ($targetPiece !== null) {
-                    return true;
-                }
+            if ($board->gameState->enPassantTarget && $to->equals($board->gameState->enPassantTarget)) {
+                return true;
+            }
+            $targetPiece = $board->getPieceOn($to);
+            if ($targetPiece !== null && $targetPiece->color !== $this->color) {
+                return true;
             }
         }
 
@@ -140,7 +136,7 @@ class Piece
         $rankDiff = abs($to->rank - $from->rank);
         $fileDiff = abs($to->file - $from->file);
 
-        if ($rankDiff <= 1 && $fileDiff <= 1 && $to->isAttacked($board, $this->color->other())) {
+        if ($rankDiff <= 1 && $fileDiff <= 1 && !$to->isAttacked($board, $this->color->other())) {
             return true;
         }
 
@@ -165,10 +161,12 @@ class Piece
 
             if ($from->isAttacked($board, $this->color->other())) return false;
 
-            $passThroughSquare = new Square(((int)(16 - $from->file - $to->file) / 2), $from->rank);
+            $passThroughSquare = new Square(($from->file + $to->file) / 2, $from->rank);
             if ($passThroughSquare->isAttacked($board, $this->color->other())) return false;
 
             if ($to->isAttacked($board, $this->color->other())) return false;
+
+            return true;
         }
 
         return false;

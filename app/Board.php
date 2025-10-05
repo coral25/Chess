@@ -41,9 +41,11 @@ class Board
 
         if (!$this->gameState->activeColor === $piece->color) return false;
 
-        //todo check castling
-
-        $this->executeMove($piece, $from, $to);
+        if ($piece->type === PieceType::KING && abs($to->file - $from->file) === 2) {
+            $this->executeCastling($from, $to);
+        } else {
+            $this->executeMove($piece, $from, $to);
+        }
 
         return true;
     }
@@ -262,22 +264,22 @@ class Board
         //rook move
         if ($piece->type === PieceType::ROOK) {
             if ($piece->color === Color::WHITE && $from->rank === 0) {
-                if ($from->file === 0) $this->gameState->whiteCastleKingside = false;
-                if ($from->file === 7) $this->gameState->whiteCastleQueenside = false;
+                if ($from->file === 7) $this->gameState->whiteCastleKingside = false;
+                if ($from->file === 0) $this->gameState->whiteCastleQueenside = false;
             } elseif ($piece->color === Color::BLACK && $from->rank === 7) {
-                if ($from->file === 0) $this->gameState->blackCastleKingside = false;
-                if ($from->file === 7) $this->gameState->blackCastleQueenside = false;
+                if ($from->file === 7) $this->gameState->blackCastleKingside = false;
+                if ($from->file === 0) $this->gameState->blackCastleQueenside = false;
             }
         }
 
         //rook capture
         if ($to->rank === 0) {
-            if ($piece->color === Color::WHITE && $from->rank === 0) {
-                if ($to->file === 0) $this->gameState->whiteCastleKingside = false;
-                if ($to->file === 7) $this->gameState->whiteCastleQueenside = false;
+            if ($piece->color === Color::WHITE) {
+                if ($to->file === 7) $this->gameState->whiteCastleKingside = false;
+                if ($to->file === 0) $this->gameState->whiteCastleQueenside = false;
             } elseif ($to->rank === 7) {
-                if ($to->file === 0) $this->gameState->blackCastleKingside = false;
-                if ($to->file === 7) $this->gameState->blackCastleQueenside = false;
+                if ($to->file === 7) $this->gameState->blackCastleKingside = false;
+                if ($to->file === 0) $this->gameState->blackCastleQueenside = false;
             }
         }
     }
