@@ -42,7 +42,11 @@ class Board
             return false;
         }
 
-        if (! $this->gameState->activeColor === $piece->color) {
+        if ($this->gameState->activeColor !== $piece->color) {
+            return false;
+        }
+
+        if ($this->wouldLeaveKingInCheck($piece, $from, $to)) {
             return false;
         }
 
@@ -224,11 +228,46 @@ class Board
             for ($rank = 0; $rank < 8; $rank++) {
                 $square = new Square($file, $rank);
                 $piece  = $this->getPieceOn($square);
-                if ($piece->type === PieceType::KING && $piece->color === $color) {
+                if ($piece && $piece->type === PieceType::KING && $piece->color === $color) {
                     return $square;
                 }
             }
         }
+    }
+
+    private function wouldLeaveKingInCheck(Piece $piece, Square $from, Square $to): bool
+    {
+        $originalFromPiece = $this->getPieceOn($from);
+        $originalToPiece   = $this->getPieceOn($to);
+
+        // en passant
+        $capturedPawnSquare = null;
+        if (
+            $piece->type === PieceType::PAWN &&
+            $this->gameState->enPassantTarget &&
+            $to->equals($this->gameState->enPassantTarget)
+        ) {
+            $capturedPawnRank   = $piece->color === Color::WHITE ? $to->rank - 1 : $to->rank + 1;
+            $capturedPawnSquare = new Square($to->file, $capturedPawnRank);
+            $capturedPawn       = $this->getPieceOn($capturedPawnSquare);
+        }
+
+        $this->setPieceOn($to, $piece);
+        $this->setPieceOn($from, null);
+        if ($capturedPawnSquare) {
+            $this->setPieceOn($capturedPawnSquare, null);
+        }
+
+        $kingSquare = $this->getKingSquare($piece->color);
+        $inCheck    = $kingSquare->isAttacked($this, $piece->color->other());
+
+        $this->setPieceOn($from, $originalFromPiece);
+        $this->setPieceOn($to, $originalToPiece);
+        if ($capturedPawnSquare) {
+            $this->setPieceOn($capturedPawnSquare, $capturedPawn);
+        }
+
+        return $inCheck;
     }
 
     private function charToPiece(string $char): Piece

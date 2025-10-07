@@ -62,12 +62,12 @@ export default function Game() {
 
 function pieceToUnicode(piece: string): string {
     const map: Record<string, string> = {
-        k: '♔',
-        q: '♕',
-        r: '♖',
-        b: '♗',
-        n: '♘',
-        p: '♙',
+        k: '♚',
+        q: '♛',
+        r: '♜',
+        b: '♝',
+        n: '♞',
+        p: '♟',
     };
     return map[piece] || '';
 }
