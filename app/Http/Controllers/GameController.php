@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Board;
@@ -12,7 +11,8 @@ use Illuminate\Support\Facades\Auth;
 
 class GameController extends Controller
 {
-    public function index() {}
+    public function index()
+    {}
 
     public function store(Request $request)
     {
@@ -32,19 +32,16 @@ class GameController extends Controller
 
         //validate
 
-
         $move = new Move;
 
-        $game = Game::findOrFail($request->game_id);
+        $game        = Game::findOrFail($request->game_id);
         $move_number = $game->moves()->count() + 1;
 
-        $move->movetext = $request->movetext;
-        $move->game_id = $request->game_id;
+        $move->movetext    = $request->movetext;
+        $move->game_id     = $request->game_id;
         $move->move_number = $move_number;
 
-
         //$fen = moveFen($request->movetext, $request->game_id)
-
 
         $fen = $game->fen;
 
@@ -52,17 +49,15 @@ class GameController extends Controller
 
         [$from, $to] = explode(' ', trim($request->movetext));
 
-        $board->movePiece(Square::fromNotation($from), Square::fromNotation($to), $fen);
-
+        $result = $board->movePiece(Square::fromNotation($from), Square::fromNotation($to), $fen);
 
         $move->fen = $game->fen = $board->toFen();
-
 
         $game->save();
         $move->save();
 
         //dispatch move event
-        MoveProcessed::dispatch($game);
+        MoveProcessed::dispatch($game, $result);
 
         return;
     }

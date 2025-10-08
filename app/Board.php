@@ -28,26 +28,27 @@ class Board
         $this->board[$square->file][$square->rank] = $piece;
     }
 
-    public function movePiece(Square $from, Square $to, string $fen): bool
+    public function movePiece(Square $from, Square $to, string $fen): string
     {
+        //return move information and game end
         $this->fromFen($fen);
 
         $piece = $this->getPieceOn($from);
 
         if (! $piece) {
-            return false;
+            return "invalid starting square";
         }
 
         if (! $piece->canMoveTo($this, $from, $to)) {
-            return false;
+            return 'invalid target square';
         }
 
         if ($this->gameState->activeColor !== $piece->color) {
-            return false;
+            return "wrong color";
         }
 
         if ($this->wouldLeaveKingInCheck($piece, $from, $to)) {
-            return false;
+            return "invalid move, would leave king in check";
         }
 
         if ($piece->type === PieceType::KING && abs($to->file - $from->file) === 2) {
@@ -56,7 +57,15 @@ class Board
             $this->executeMove($piece, $from, $to);
         }
 
-        return true;
+        if (! $this->hasAnyLegalMoves()) {
+            if ($this->getKingSquare($this->gameState->activeColor)->isAttacked($this, $this->gameState->activeColor->other())) {
+                return "checkmate";
+            } else {
+                return "stalemate";
+            }
+        }
+
+        return "move made";
     }
 
     private function executeMove(Piece $piece, Square $from, Square $to)
@@ -233,6 +242,50 @@ class Board
                 }
             }
         }
+    }
+
+    public function getLegalMoves(Square $square): array
+    {
+        $piece = $this->getPieceOn($square);
+
+        if (! $piece) {
+            return [];
+        }
+
+        $legalMoves = [];
+        //todo make it piece specific for performance
+        for ($file = 0; $file < 8; $file++) {
+            for ($rank = 0; $rank < 8; $rank++) {
+                $targetSquare = new Square($file, $rank);
+
+                if ($piece->canMoveTo($this, $square, $targetSquare)) {
+                    if (! $this->wouldLeaveKingInCheck($piece, $square, $targetSquare)) {
+                        $legalMoves[] = $targetSquare;
+                    }
+                }
+            }
+        }
+
+        return $legalMoves;
+    }
+
+    public function hasAnyLegalMoves(): bool
+    {
+        //temp
+        for ($file = 0; $file < 8; $file++) {
+            for ($rank = 0; $rank < 8; $rank++) {
+                $square = new Square($file, $rank);
+                $piece  = $this->getPieceOn($square);
+
+                if ($piece && $piece->color === $this->gameState->activeColor) {
+                    if (count($this->getLegalMoves($square)) > 0) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     private function wouldLeaveKingInCheck(Piece $piece, Square $from, Square $to): bool
