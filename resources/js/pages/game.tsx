@@ -37,17 +37,24 @@ export default function Game() {
                             {board.map((row, i) =>
                                 row.map((piece, j) => {
                                     const isLight = (i + j) % 2 === 1;
+                                    const file = String.fromCharCode(97 + j); // a-h
+                                    const rank = 8 - i; // 8-1
+                                    const square = `${file}${rank}`;
                                     return (
                                         <div
-                                            key={i + '-' + j}
+                                            key={square}
                                             className={
-                                                'twxt flex h-16 w-16 items-center justify-center text-6xl font-extrabold text-shadow-md ' +
-                                                (piece[0] === 'b' ? 'text-black text-shadow-white' : 'text-white text-shadow-black') +
-                                                ' ' +
+                                                'flex h-16 w-16 items-center justify-center ' +
                                                 (isLight ? 'bg-white' : 'bg-gray-600')
                                             }
                                         >
-                                            {piece ? pieceToUnicode(piece[1]) : ''}
+                                            {piece && pieceToFileName(piece) && (
+                                                <img
+                                                    src={`/pieces/${pieceToFileName(piece)}.svg`}
+                                                    alt={piece}
+                                                    className="h-14 w-14"
+                                                />
+                                            )}
                                         </div>
                                     );
                                 }),
@@ -60,14 +67,19 @@ export default function Game() {
     );
 }
 
-function pieceToUnicode(piece: string): string {
+function pieceToFileName(piece: string): string {
+    if (!piece || piece.length < 2) return '';
+    const color = piece[0] === 'b' ? 'b' : 'w';
+    const pieceType = piece[1];
     const map: Record<string, string> = {
-        k: '♚',
-        q: '♛',
-        r: '♜',
-        b: '♝',
-        n: '♞',
-        p: '♟',
+        k: 'king',
+        q: 'queen',
+        r: 'rook',
+        b: 'bishop',
+        n: 'knight',
+        p: 'pawn',
     };
-    return map[piece] || '';
+    const pieceName = map[pieceType];
+    if (!pieceName) return '';
+    return `${pieceName}-${color}`;
 }
