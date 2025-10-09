@@ -4,6 +4,10 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { useEcho } from '@laravel/echo-react';
 import { useState } from 'react';
 import { fenToBoard } from '../lib/fen';
+import ChessBoard from '@/components/game/chess-board';
+import PlayerInfo from '@/components/game/player-info';
+import MoveList from '@/components/game/move-list';
+import GameControls from '@/components/game/game-controls';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -23,9 +27,6 @@ export default function Game() {
 
     const board = fenToBoard(game.fen);
     const isPlayerBlack = auth.user.id === game.black_player_id;
-
-    //flip board for black player
-    const displayBoard = isPlayerBlack ? board.map((row) => [...row].reverse()).reverse() : board;
 
     const handleSquareClick = (square: string, piece: string) => {
         if (!selectedSquare) {
@@ -74,137 +75,37 @@ export default function Game() {
         setDraggedFrom(null);
     };
 
+    const opponentPlayer = isPlayerBlack ? game.white_player : game.black_player;
+    const currentPlayer = isPlayerBlack ? game.black_player : game.white_player;
+    const opponentName = isPlayerBlack ? 'White Player' : 'Black Player';
+    const currentName = isPlayerBlack ? 'Black Player' : 'White Player';
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Game" />
             <div className="flex min-h-0 items-center justify-center gap-8 p-4">
                 <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="rounded-lg border border-gray-300 bg-white px-4 py-2 dark:border-gray-700 dark:bg-gray-800">
-                            <div className="text-sm font-medium">
-                                {isPlayerBlack ? game.white_player?.name || 'White Player' : game.black_player?.name || 'Black Player'}
-                            </div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400"></div>
-                        </div>
-                        <div className="rounded-lg border border-gray-300 bg-white px-4 py-2 dark:border-gray-700 dark:bg-gray-800">
-                            <div className="text-lg font-bold">10:00</div>
-                        </div>
-                    </div>
+                    <PlayerInfo player={opponentPlayer} defaultName={opponentName} time="10:00" position="top" />
 
-                    <div className="relative overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <div className="bg-grey inline-block rounded border border-black">
-                            <div className="grid aspect-square w-[min(calc(100vh-16rem),calc(100vw-28rem),600px)] grid-cols-8">
-                                {displayBoard.map((row, displayI) =>
-                                    row.map((piece, displayJ) => {
-                                        const i = isPlayerBlack ? 7 - displayI : displayI;
-                                        const j = isPlayerBlack ? 7 - displayJ : displayJ;
-                                        const isLight = (i + j) % 2 === 1;
-                                        const file = String.fromCharCode(97 + j); // a-h
-                                        const rank = 8 - i; // 8-1
-                                        const square = `${file}${rank}`;
-                                        return (
-                                            <div
-                                                key={square}
-                                                onClick={() => handleSquareClick(square, piece)}
-                                                onDragOver={handleDragOver}
-                                                onDrop={(e) => handleDrop(square, e)}
-                                                className={
-                                                    'flex aspect-square cursor-pointer items-center justify-center transition-colors ' +
-                                                    (isLight ? 'bg-white' : 'bg-gray-600') +
-                                                    (selectedSquare === square ? ' ring-4 ring-blue-500' : '') +
-                                                    (draggedFrom === square ? ' opacity-50' : '')
-                                                }
-                                            >
-                                                {piece && pieceToFileName(piece) && (
-                                                    <img
-                                                        src={`/pieces/${pieceToFileName(piece)}.svg`}
-                                                        alt={piece}
-                                                        className="h-[85%] w-[85%] cursor-grab active:cursor-grabbing"
-                                                        draggable
-                                                        onDragStart={(e) => handleDragStart(square, piece, e)}
-                                                        onDragEnd={handleDragEnd}
-                                                    />
-                                                )}
-                                            </div>
-                                        );
-                                    }),
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="rounded-lg border border-gray-300 bg-white px-4 py-2 dark:border-gray-700 dark:bg-gray-800">
-                            <div className="text-lg font-bold">10:00</div>
-                        </div>
-                        <div className="rounded-lg border border-gray-300 bg-white px-4 py-2 dark:border-gray-700 dark:bg-gray-800">
-                            <div className="text-sm font-medium">
-                                {isPlayerBlack ? game.black_player?.name || 'Black Player' : game.white_player?.name || 'White Player'}
-                            </div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400"></div>
-                        </div>
-                    </div>
+                    <ChessBoard
+                        board={board}
+                        isPlayerBlack={isPlayerBlack}
+                        selectedSquare={selectedSquare}
+                        draggedFrom={draggedFrom}
+                        onSquareClick={handleSquareClick}
+                        onDragStart={handleDragStart}
+                        onDragOver={handleDragOver}
+                        onDrop={handleDrop}
+                        onDragEnd={handleDragEnd}
+                    />
+
+                    <PlayerInfo player={currentPlayer} defaultName={currentName} time="10:00" position="bottom" />
                 </div>
                 <div className="flex flex-col gap-4">
-                    <div className="h-128 w-64 overflow-y-auto rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-                        <h3 className="mb-3 text-sm font-semibold">Moves</h3>
-                        <div className="space-y-1 text-sm">
-                            {game.moves && game.moves.length > 0 ? (
-                                game.moves.reduce((acc: React.ReactElement[], move, index) => {
-                                    const moveNumber = Math.floor(index / 2) + 1;
-                                    const isWhiteMove = index % 2 === 0;
-
-                                    if (isWhiteMove) {
-                                        acc.push(
-                                            <div key={move.id} className="grid grid-cols-3 gap-2">
-                                                <span className="text-gray-500">{moveNumber}.</span>
-                                                <span>{move.movetext}</span>
-                                                <span></span>
-                                            </div>,
-                                        );
-                                    } else {
-                                        const lastRow = acc[acc.length - 1];
-                                        acc[acc.length - 1] = (
-                                            <div key={lastRow.key} className="grid grid-cols-3 gap-2">
-                                                <span className="text-gray-500">{moveNumber}.</span>
-                                                <span>{game.moves![index - 1].movetext}</span>
-                                                <span>{move.movetext}</span>
-                                            </div>
-                                        );
-                                    }
-                                    return acc;
-                                }, [])
-                            ) : (
-                                <div className="text-xs text-gray-500">No moves yet</div>
-                            )}
-                        </div>
-                    </div>
-                    <div className="flex gap-2">
-                        <button className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
-                            Draw
-                        </button>
-                        <button className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
-                            Resign
-                        </button>
-                    </div>
+                    <MoveList moves={game.moves} />
+                    <GameControls />
                 </div>
             </div>
         </AppLayout>
     );
-}
-
-function pieceToFileName(piece: string): string {
-    if (!piece || piece.length < 2) return '';
-    const color = piece[0] === 'b' ? 'b' : 'w';
-    const pieceType = piece[1];
-    const map: Record<string, string> = {
-        k: 'king',
-        q: 'queen',
-        r: 'rook',
-        b: 'bishop',
-        n: 'knight',
-        p: 'pawn',
-    };
-    const pieceName = map[pieceType];
-    if (!pieceName) return '';
-    return `${pieceName}-${color}`;
 }
