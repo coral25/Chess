@@ -32,17 +32,7 @@ class GameController extends Controller
 
         //validate
 
-        $move = new Move;
-
-        $game        = Game::findOrFail($request->game_id);
-        $move_number = $game->moves()->count() + 1;
-
-        $move->movetext    = $request->movetext;
-        $move->game_id     = $request->game_id;
-        $move->move_number = $move_number;
-
-        //$fen = moveFen($request->movetext, $request->game_id)
-
+        $game = Game::findOrFail($request->game_id);
         $fen = $game->fen;
 
         $board = new Board();
@@ -51,13 +41,22 @@ class GameController extends Controller
 
         $result = $board->movePiece(Square::fromNotation($from), Square::fromNotation($to), $fen);
 
-        $move->fen = $game->fen = $board->toFen();
+        // Only save the move if it was successful
+        if ($result === 'move made' || $result === 'checkmate' || $result === 'stalemate') {
+            $move = new Move;
+            $move_number = $game->moves()->count() + 1;
 
-        $game->save();
-        $move->save();
+            $move->movetext    = $request->movetext;
+            $move->game_id     = $request->game_id;
+            $move->move_number = $move_number;
+            $move->fen = $game->fen = $board->toFen();
 
-        //dispatch move event
-        MoveProcessed::dispatch($game, $result);
+            $game->save();
+            $move->save();
+
+            //dispatch move event
+            MoveProcessed::dispatch($game, $result);
+        }
 
         return;
     }
