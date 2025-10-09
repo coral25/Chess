@@ -10,7 +10,12 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/game', function () {
-    return Inertia::render('game');
+    $game = \App\Models\Game::with(['white_player', 'black_player', 'moves' => function($query) {
+        $query->orderBy('move_number');
+    }])->first();
+    return Inertia::render('game', [
+        'game' => $game
+    ]);
 })->name('game');
 
 Route::post('game/move', [GameController::class, 'move'])->name('game.move');

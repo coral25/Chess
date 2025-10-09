@@ -5,11 +5,24 @@ export interface Auth {
     user: User;
 }
 
+export interface Move {
+    id: number;
+    game_id: number;
+    move_number: number;
+    movetext: string;
+    fen: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Game {
     id: number;
     white_player_id: number;
     black_player_id: number;
     fen: string;
+    white_player?: User;
+    black_player?: User;
+    moves?: Move[];
 }
 
 export interface BreadcrumbItem {
