@@ -13,7 +13,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Game() {
-    const { game } = usePage<SharedData>().props;
+    const { game, auth } = usePage<SharedData>().props;
     const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
     const [draggedFrom, setDraggedFrom] = useState<string | null>(null);
 
@@ -22,6 +22,10 @@ export default function Game() {
     });
 
     const board = fenToBoard(game.fen);
+    const isPlayerBlack = auth.user.id === game.black_player_id;
+
+    //flip board for black player
+    const displayBoard = isPlayerBlack ? board.map((row) => [...row].reverse()).reverse() : board;
 
     const handleSquareClick = (square: string, piece: string) => {
         if (!selectedSquare) {
@@ -77,7 +81,9 @@ export default function Game() {
                 <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between gap-4">
                         <div className="rounded-lg border border-gray-300 bg-white px-4 py-2 dark:border-gray-700 dark:bg-gray-800">
-                            <div className="text-sm font-medium">{game.black_player?.name || 'Black Player'}</div>
+                            <div className="text-sm font-medium">
+                                {isPlayerBlack ? game.white_player?.name || 'White Player' : game.black_player?.name || 'Black Player'}
+                            </div>
                             <div className="text-xs text-gray-600 dark:text-gray-400"></div>
                         </div>
                         <div className="rounded-lg border border-gray-300 bg-white px-4 py-2 dark:border-gray-700 dark:bg-gray-800">
@@ -88,8 +94,10 @@ export default function Game() {
                     <div className="relative overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                         <div className="bg-grey inline-block rounded border border-black">
                             <div className="grid aspect-square w-[min(calc(100vh-16rem),calc(100vw-28rem),600px)] grid-cols-8">
-                                {board.map((row, i) =>
-                                    row.map((piece, j) => {
+                                {displayBoard.map((row, displayI) =>
+                                    row.map((piece, displayJ) => {
+                                        const i = isPlayerBlack ? 7 - displayI : displayI;
+                                        const j = isPlayerBlack ? 7 - displayJ : displayJ;
                                         const isLight = (i + j) % 2 === 1;
                                         const file = String.fromCharCode(97 + j); // a-h
                                         const rank = 8 - i; // 8-1
@@ -129,7 +137,9 @@ export default function Game() {
                             <div className="text-lg font-bold">10:00</div>
                         </div>
                         <div className="rounded-lg border border-gray-300 bg-white px-4 py-2 dark:border-gray-700 dark:bg-gray-800">
-                            <div className="text-sm font-medium">{game.white_player?.name || 'White Player'}</div>
+                            <div className="text-sm font-medium">
+                                {isPlayerBlack ? game.black_player?.name || 'Black Player' : game.white_player?.name || 'White Player'}
+                            </div>
                             <div className="text-xs text-gray-600 dark:text-gray-400"></div>
                         </div>
                     </div>
