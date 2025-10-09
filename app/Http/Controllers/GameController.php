@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Board;
@@ -11,8 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 class GameController extends Controller
 {
-    public function index()
-    {}
+    public function index() {}
 
     public function store(Request $request)
     {
@@ -53,11 +53,10 @@ class GameController extends Controller
 
             $game->save();
             $move->save();
-
-            //dispatch move event
-            MoveProcessed::dispatch($game, $result);
         }
 
+        //dispatch move event
+        MoveProcessed::dispatch($game, $result);
         return;
     }
 }
