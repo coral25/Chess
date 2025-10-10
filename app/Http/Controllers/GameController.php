@@ -30,9 +30,25 @@ class GameController extends Controller
         *   'movetext' 'game_id' 'player_id'
         */
 
-        //validate
-
         $game = Game::findOrFail($request->game_id);
+        $userId = Auth::id();
+
+        //check if player is in the game
+        if ($userId !== $game->white_player_id && $userId !== $game->black_player_id) {
+            return;
+        }
+        //check color
+        $fenParts = explode(' ', trim($game->fen));
+        $activeColor = $fenParts[1];
+
+        if ($activeColor === 'w' && $userId !== $game->white_player_id) {
+            return;
+        }
+
+        if ($activeColor === 'b' && $userId !== $game->black_player_id) {
+            return;
+        }
+
         $fen = $game->fen;
 
         $board = new Board();
