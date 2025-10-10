@@ -20,12 +20,16 @@ export default function Game() {
     const { game, auth } = usePage<SharedData>().props;
     const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
     const [draggedFrom, setDraggedFrom] = useState<string | null>(null);
+    const [currentFen, setCurrentFen] = useState<string>(game.fen);
 
-    useEcho('asd', 'MoveProcessed', (e) => {
+    useEcho('asd', 'MoveProcessed', (e: any) => {
         console.log(e);
+        if (e.gameId === game.id && e.fen) {
+            setCurrentFen(e.fen);
+        }
     });
 
-    const board = fenToBoard(game.fen);
+    const board = fenToBoard(currentFen);
     const isPlayerBlack = auth.user.id === game.black_player_id;
 
     const handleSquareClick = (square: string, piece: string) => {
