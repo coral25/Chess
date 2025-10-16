@@ -15,6 +15,12 @@ export interface Move {
     updated_at: string;
 }
 
+export interface MoveProcessedEvent {
+    gameId: number;
+    fen: string;
+    message: string;
+}
+
 export interface Game {
     id: number;
     white_player_id: number;

@@ -1,13 +1,13 @@
+import ChessBoard from '@/components/game/chess-board';
+import GameControls from '@/components/game/game-controls';
+import MoveList from '@/components/game/move-list';
+import PlayerInfo from '@/components/game/player-info';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, type SharedData } from '@/types';
+import { type BreadcrumbItem, type MoveProcessedEvent, type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useEcho } from '@laravel/echo-react';
 import { useState } from 'react';
 import { fenToBoard } from '../lib/fen';
-import ChessBoard from '@/components/game/chess-board';
-import PlayerInfo from '@/components/game/player-info';
-import MoveList from '@/components/game/move-list';
-import GameControls from '@/components/game/game-controls';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -22,11 +22,9 @@ export default function Game() {
     const [draggedFrom, setDraggedFrom] = useState<string | null>(null);
     const [currentFen, setCurrentFen] = useState<string>(game.fen);
 
-    useEcho('asd', 'MoveProcessed', (e: any) => {
+    useEcho(`game.${game.id}`, 'MoveProcessed', (e: MoveProcessedEvent) => {
         console.log(e);
-        if (e.gameId === game.id && e.fen) {
-            setCurrentFen(e.fen);
-        }
+        setCurrentFen(e.fen);
     });
 
     const board = fenToBoard(currentFen);

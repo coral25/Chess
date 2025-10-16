@@ -47,6 +47,6 @@ class MoveProcessed implements ShouldBroadcastNow
      */
     public function broadcastOn(): Channel
     {
-        return new PrivateChannel('asd');
+        return new PrivateChannel('game.' . $this->gameId);
     }
 }
