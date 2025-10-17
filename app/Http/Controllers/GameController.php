@@ -80,6 +80,23 @@ class GameController extends Controller
         ]);
     }
 
+    public function review($id)
+    {
+        $game = Game::with(['white_player', 'black_player', 'moves' => function ($query) {
+            $query->orderBy('move_number');
+        }])->findOrFail($id);
+
+        $userId = Auth::id();
+
+        if ($userId !== $game->white_player_id && $userId !== $game->black_player_id) {
+            return redirect()->route('lobby')->with('error', 'You are not part of this game.');
+        }
+
+        return Inertia::render('review', [
+            'game' => $game,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $game = Game::create([

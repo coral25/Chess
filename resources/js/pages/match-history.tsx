@@ -123,7 +123,7 @@ export default function MatchHistory() {
                                                     {result.text}
                                                 </Badge>
                                             </div>
-                                            <Button onClick={() => handleViewGame(game.id)} className="w-full" variant="outline">
+                                            <Button onClick={() => router.get(`/game/${game.id}/review`)} className="w-full" variant="outline">
                                                 Review Game
                                             </Button>
                                         </CardContent>
