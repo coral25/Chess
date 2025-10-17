@@ -105,7 +105,7 @@ export default function Game() {
                 </div>
                 <div className="flex flex-col gap-4">
                     <MoveList moves={game.moves} />
-                    <GameControls />
+                    <GameControls gameId={game.id} />
                 </div>
             </div>
         </AppLayout>

@@ -183,4 +183,28 @@ class GameController extends Controller
         MoveProcessed::dispatch($game, $result);
         return;
     }
+
+    public function resign(Request $request, $id)
+    {
+        $game = Game::findOrFail($id);
+        $userId = Auth::id();
+
+        if ($userId !== $game->white_player_id && $userId !== $game->black_player_id) {
+            return redirect()->route('lobby')->with('error', 'You are not part of this game.');
+        }
+
+        if ($game->status !== GameStatus::InProgress) {
+            return redirect()->route('game.show', $game->id)->with('error', 'This game is not in progress.');
+        }
+
+        if ($userId === $game->white_player_id) {
+            $game->status = GameStatus::BlackWin;
+        } else {
+            $game->status = GameStatus::WhiteWin;
+        }
+
+        $game->save();
+
+        return redirect()->route('lobby')->with('success', 'Resigned.');
+    }
 }

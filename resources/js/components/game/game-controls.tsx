@@ -1,12 +1,25 @@
-export default function GameControls() {
+import { Button } from '@/components/ui/button';
+import { router } from '@inertiajs/react';
+
+interface GameControlsProps {
+    gameId: number;
+}
+
+export default function GameControls({ gameId }: GameControlsProps) {
+    const handleResign = () => {
+        if (confirm('Are you sure you want to resign? This will end the game.')) {
+            router.post(`/game/${gameId}/resign`);
+        }
+    };
+
     return (
         <div className="flex gap-2">
-            <button className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
+            <Button variant="outline" className="flex-1" disabled>
                 Draw
-            </button>
-            <button className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
+            </Button>
+            <Button variant="destructive" className="flex-1" onClick={handleResign}>
                 Resign
-            </button>
+            </Button>
         </div>
     );
 }

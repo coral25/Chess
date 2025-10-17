@@ -21,6 +21,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('game/{id}', [GameController::class, 'show'])->name('game.show');
     Route::post('game/{id}/join', [GameController::class, 'join'])->name('game.join');
     Route::post('game/move', [GameController::class, 'move'])->name('game.move');
+    Route::post('game/{id}/resign', [GameController::class, 'resign'])->name('game.resign');
 });
 
 require __DIR__.'/settings.php';
