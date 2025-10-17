@@ -23,12 +23,15 @@ export interface MoveProcessedEvent {
 
 export interface Game {
     id: number;
-    white_player_id: number;
-    black_player_id: number;
+    white_player_id: number | null;
+    black_player_id: number | null;
     fen: string;
+    status: GameStatus;
     white_player?: User;
     black_player?: User;
     moves?: Move[];
+    created_at: string;
+    updated_at: string;
 }
 
 export interface BreadcrumbItem {

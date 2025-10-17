@@ -9,21 +9,17 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
-Route::get('/game', function () {
-    $game = \App\Models\Game::with(['white_player', 'black_player', 'moves' => function($query) {
-        $query->orderBy('move_number');
-    }])->first();
-    return Inertia::render('game', [
-        'game' => $game
-    ]);
-})->name('game');
-
-Route::post('game/move', [GameController::class, 'move'])->name('game.move');
-
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+
+    // Game routes
+    Route::get('lobby', [GameController::class, 'lobby'])->name('lobby');
+    Route::post('game/create', [GameController::class, 'store'])->name('game.create');
+    Route::get('game/{id}', [GameController::class, 'show'])->name('game.show');
+    Route::post('game/{id}/join', [GameController::class, 'join'])->name('game.join');
+    Route::post('game/move', [GameController::class, 'move'])->name('game.move');
 });
 
 require __DIR__.'/settings.php';

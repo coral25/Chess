@@ -14,14 +14,14 @@ return new class extends Migration
     {
         Schema::create('games', function (Blueprint $table) {
             $table->id();
-            $table->enum('status',GameStatus::cases())->default(0);
+            $table->enum('status',GameStatus::cases())->default(GameStatus::CreatingPublic->value);
             $table->string('fen')->default('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
             $table->timestamps();
 
-            $table->unsignedBigInteger('white_player_id');
+            $table->unsignedBigInteger('white_player_id')->nullable();
             $table->foreign('white_player_id')->references('id')->on('users')->nullOnDelete();
 
-            $table->unsignedBigInteger('black_player_id');
+            $table->unsignedBigInteger('black_player_id')->nullable();
             $table->foreign('black_player_id')->references('id')->on('users')->nullOnDelete();
         });
     }

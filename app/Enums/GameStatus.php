@@ -8,4 +8,6 @@ enum GameStatus: int
     case WhiteWin = 1;
     case BlackWin = 2;
     case Draw = 3;
+    case CreatingPublic = 4;
+    case CreatingPrivate = 5;
 }
