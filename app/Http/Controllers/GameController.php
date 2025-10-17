@@ -45,6 +45,24 @@ class GameController extends Controller
         ]);
     }
 
+    public function history()
+    {
+        $userId = Auth::id();
+
+        $finishedGames = Game::with(['white_player', 'black_player'])
+            ->where(function ($query) use ($userId) {
+                $query->where('white_player_id', $userId)
+                    ->orWhere('black_player_id', $userId);
+            })
+            ->whereIn('status', [GameStatus::WhiteWin->value, GameStatus::BlackWin->value, GameStatus::Draw->value])
+            ->latest()
+            ->get();
+
+        return Inertia::render('match-history', [
+            'finishedGames' => $finishedGames,
+        ]);
+    }
+
     public function show($id)
     {
         $game = Game::with(['white_player', 'black_player', 'moves' => function ($query) {
@@ -148,6 +166,14 @@ class GameController extends Controller
             $move->game_id     = $request->game_id;
             $move->move_number = $move_number;
             $move->fen = $game->fen = $board->toFen();
+
+            if ($result === 'checkmate') {
+                $fenParts = explode(' ', trim($game->fen));
+                $activeColor = $fenParts[1];
+                $game->status = $activeColor === 'w' ? GameStatus::BlackWin : GameStatus::WhiteWin;
+            } elseif ($result === 'stalemate') {
+                $game->status = GameStatus::Draw;
+            }
 
             $game->save();
             $move->save();

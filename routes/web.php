@@ -16,6 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Game routes
     Route::get('lobby', [GameController::class, 'lobby'])->name('lobby');
+    Route::get('history', [GameController::class, 'history'])->name('history');
     Route::post('game/create', [GameController::class, 'store'])->name('game.create');
     Route::get('game/{id}', [GameController::class, 'show'])->name('game.show');
     Route::post('game/{id}/join', [GameController::class, 'join'])->name('game.join');
