@@ -173,98 +173,81 @@ export default function Review() {
                             onStartClick={handleStartClick}
                         />
                     </div>
+                    <div className="space-y-4">
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="icon" onClick={handleFirst} disabled={currentMoveIndex === 0} title="First move">
+                                <ChevronsLeft className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="icon" onClick={handlePrevious} disabled={currentMoveIndex === 0} title="Previous move">
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={handleNext}
+                                disabled={!game.moves || currentMoveIndex >= game.moves.length}
+                                title="Next move"
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={handleLast}
+                                disabled={!game.moves || currentMoveIndex >= game.moves.length}
+                                title="Last move"
+                            >
+                                <ChevronsRight className="h-4 w-4" />
+                            </Button>
+                        </div>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Analysis</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {currentMoveIndex === 0 ? (
-                                <div className="text-sm text-muted-foreground">Navigate to a move to see analysis</div>
-                            ) : isLoadingAnalysis ? (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    <span>Analyzing position...</span>
-                                </div>
-                            ) : currentAnalysis ? (
-                                <div className="space-y-3">
-                                    <div className="flex items-start gap-2">
-                                        {currentAnalysis.is_best ? (
-                                            <CheckCircle className="mt-0.5 h-5 w-5 text-green-600" />
-                                        ) : (
-                                            <AlertCircle className="mt-0.5 h-5 w-5 text-yellow-600" />
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Analysis</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {currentMoveIndex === 0 ? (
+                                    <div className="text-sm text-muted-foreground">Navigate to a move to see analysis</div>
+                                ) : isLoadingAnalysis ? (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        <span>Analyzing position...</span>
+                                    </div>
+                                ) : currentAnalysis ? (
+                                    <div className="space-y-3">
+                                        <div className="flex items-start gap-2">
+                                            {currentAnalysis.is_best ? (
+                                                <CheckCircle className="mt-0.5 h-5 w-5 text-green-600" />
+                                            ) : (
+                                                <AlertCircle className="mt-0.5 h-5 w-5 text-yellow-600" />
+                                            )}
+                                            <div className="flex-1">
+                                                <div className="mb-1 text-sm font-medium">
+                                                    {currentAnalysis.is_best ? 'Best move played!' : 'Suboptimal move'}
+                                                </div>
+                                                <div className="mb-2 text-xs text-muted-foreground">
+                                                    Move played: <span className="font-mono">{currentAnalysis.actual_move}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {!currentAnalysis.is_best && currentAnalysis.best_move && (
+                                            <div className="space-y-1 rounded-md border bg-muted/50 p-3">
+                                                <div className="text-xs font-medium">Better move:</div>
+                                                <div className="font-mono text-sm font-bold">{currentAnalysis.best_move}</div>
+                                            </div>
                                         )}
-                                        <div className="flex-1">
-                                            <div className="mb-1 text-sm font-medium">
-                                                {currentAnalysis.is_best ? 'Best move played!' : 'Suboptimal move'}
-                                            </div>
-                                            <div className="mb-2 text-xs text-muted-foreground">
-                                                Move played: <span className="font-mono">{currentAnalysis.actual_move}</span>
-                                            </div>
+
+                                        <div className="pt-1 text-xs text-muted-foreground">
+                                            Evaluation: {(currentAnalysis.evaluation / 100).toFixed(2)}
                                         </div>
                                     </div>
-
-                                    {!currentAnalysis.is_best && currentAnalysis.best_move && (
-                                        <div className="space-y-1 rounded-md border bg-muted/50 p-3">
-                                            <div className="text-xs font-medium">Better move:</div>
-                                            <div className="font-mono text-sm font-bold">{currentAnalysis.best_move}</div>
-                                        </div>
-                                    )}
-
-                                    <div className="pt-1 text-xs text-muted-foreground">
-                                        Evaluation: {(currentAnalysis.evaluation / 100).toFixed(2)}
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="text-sm text-muted-foreground">No analysis available</div>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Navigation</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                <div className="flex gap-2">
-                                    <Button variant="outline" size="icon" onClick={handleFirst} disabled={currentMoveIndex === 0} title="First move">
-                                        <ChevronsLeft className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={handlePrevious}
-                                        disabled={currentMoveIndex === 0}
-                                        title="Previous move"
-                                    >
-                                        <ChevronLeft className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={handleNext}
-                                        disabled={!game.moves || currentMoveIndex >= game.moves.length}
-                                        title="Next move"
-                                    >
-                                        <ChevronRight className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={handleLast}
-                                        disabled={!game.moves || currentMoveIndex >= game.moves.length}
-                                        title="Last move"
-                                    >
-                                        <ChevronsRight className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                <div className="text-center text-sm text-muted-foreground">
-                                    Move {currentMoveIndex} of {game.moves?.length ?? 0}
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                                ) : (
+                                    <div className="text-sm text-muted-foreground">No analysis available</div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
             </div>
         </AppLayout>
