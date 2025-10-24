@@ -51,11 +51,21 @@ export interface NavItem {
     isActive?: boolean;
 }
 
+export interface MoveAnalysis {
+    move_number: number;
+    actual_move: string;
+    best_move: string | null;
+    evaluation: number;
+    is_best: boolean;
+    error?: string;
+}
+
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
     auth: Auth;
     game: Game;
+    analysis?: MoveAnalysis[];
     ziggy: Config & { location: string };
     sidebarOpen: boolean;
     [key: string]: unknown;

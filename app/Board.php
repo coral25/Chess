@@ -121,7 +121,7 @@ class Board
         }
     }
 
-    private function fromFen(string $fen)
+    public function fromFen(string $fen)
     {
         [$piecePlacement, $activeColor, $castling, $enPassant, $halfmoves, $fullmoves] = explode(' ', trim($fen));
 

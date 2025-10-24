@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Board;
 use App\Enums\GameStatus;
 use App\Events\MoveProcessed;
+use App\Minimax\MinimaxEngine;
 use App\Models\Game;
 use App\Models\Move;
 use App\Square;
@@ -95,6 +96,58 @@ class GameController extends Controller
         return Inertia::render('review', [
             'game' => $game,
         ]);
+    }
+
+    public function analyzeMove(Request $request, $id)
+    {
+        $game = Game::with(['moves' => function ($query) {
+            $query->orderBy('move_number');
+        }])->findOrFail($id);
+
+        $userId = Auth::id();
+
+        if ($userId !== $game->white_player_id && $userId !== $game->black_player_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $moveNumber = $request->input('move_number');
+
+        if (!$moveNumber || $moveNumber < 1) {
+            return response()->json(['error' => 'Invalid move number'], 400);
+        }
+
+        // Get the move being analyzed
+        $move = $game->moves->firstWhere('move_number', $moveNumber);
+
+        if (!$move) {
+            return response()->json(['error' => 'Move not found'], 404);
+        }
+
+        // Get the FEN before this move was made
+        if ($moveNumber === 1) {
+            $previousFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+        } else {
+            $previousMove = $game->moves->firstWhere('move_number', $moveNumber - 1);
+            $previousFen = $previousMove ? $previousMove->fen : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+        }
+
+        try {
+            $engine = new MinimaxEngine();
+            $result = $engine->findBestMove($previousFen, 2);
+
+            return response()->json([
+                'move_number' => $move->move_number,
+                'actual_move' => $move->movetext,
+                'best_move' => $result['move'],
+                'evaluation' => $result['evaluation'],
+                'is_best' => $move->movetext === $result['move'],
+                'nodes' => $result['nodes'],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to analyze move: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function store(Request $request)
@@ -223,5 +276,28 @@ class GameController extends Controller
         $game->save();
 
         return redirect()->route('lobby')->with('success', 'Resigned.');
+    }
+
+    public function suggestMove(Request $request, $id)
+    {
+        $game = Game::findOrFail($id);
+
+        $fen = $request->input('fen', $game->fen);
+        $depth = $request->input('depth', 3); // Default depth of 3
+
+        try {
+            $engine = new MinimaxEngine();
+            $result = $engine->findBestMove($fen, $depth);
+
+            return response()->json([
+                'move' => $result['move'],
+                'evaluation' => $result['evaluation'],
+                'nodes' => $result['nodes'],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to calculate best move: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

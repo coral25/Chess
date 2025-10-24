@@ -17,9 +17,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('game/create', [GameController::class, 'store'])->name('game.create');
     Route::get('game/{id}', [GameController::class, 'show'])->name('game.show');
     Route::get('game/{id}/review', [GameController::class, 'review'])->name('game.review');
+    Route::post('game/{id}/analyze-move', [GameController::class, 'analyzeMove'])->name('game.analyze-move');
     Route::post('game/{id}/join', [GameController::class, 'join'])->name('game.join');
     Route::post('game/move', [GameController::class, 'move'])->name('game.move');
     Route::post('game/{id}/resign', [GameController::class, 'resign'])->name('game.resign');
+    Route::post('game/{id}/suggest-move', [GameController::class, 'suggestMove'])->name('game.suggest-move');
 });
 
 require __DIR__ . '/settings.php';
