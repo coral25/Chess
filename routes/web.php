@@ -10,11 +10,8 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
-
     // Game routes
+    Route::get('/', [GameController::class, 'lobby'])->name('home');
     Route::get('lobby', [GameController::class, 'lobby'])->name('lobby');
     Route::get('history', [GameController::class, 'history'])->name('history');
     Route::post('game/create', [GameController::class, 'store'])->name('game.create');
@@ -25,5 +22,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('game/{id}/resign', [GameController::class, 'resign'])->name('game.resign');
 });
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';
