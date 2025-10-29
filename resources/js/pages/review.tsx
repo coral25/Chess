@@ -135,7 +135,7 @@ export default function Review() {
         };
 
         fetchAnalysis();
-    }, [currentMoveIndex, game.id]);
+    }, [currentMoveIndex, game.id, analysisCache]);
 
     const opponentPlayer = isPlayerBlack ? game.white_player : game.black_player;
     const currentPlayer = isPlayerBlack ? game.black_player : game.white_player;

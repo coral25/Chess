@@ -16,10 +16,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function MatchHistory() {
     const { finishedGames, auth } = usePage<SharedData & { finishedGames: Game[] }>().props;
 
-    const handleViewGame = (gameId: number) => {
-        router.get(`/game/${gameId}`);
-    };
-
     const getGameStatusBadge = (game: Game) => {
         switch (game.status) {
             case GameStatus.WhiteWin:

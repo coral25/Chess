@@ -14,7 +14,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Lobby() {
-    const { availableGames, userGames, auth } = usePage<SharedData & { availableGames: Game[]; userGames: Game[] }>().props;
+    const { availableGames, userGames } = usePage<SharedData & { availableGames: Game[]; userGames: Game[] }>().props;
 
     const handleCreateGame = () => {
         router.post('/game/create');
